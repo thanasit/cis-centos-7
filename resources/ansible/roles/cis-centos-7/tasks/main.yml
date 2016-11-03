@@ -1,0 +1,3 @@
+---
+- name: CIS Test
+  command: echo "CIS Test"

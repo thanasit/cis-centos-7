@@ -1,0 +1,96 @@
+---
+- name: Stop firewalld.
+  service: name=firewalld enabled=no state=stopped
+
+- name: Stop NetworkManager.
+  service: name=NetworkManager enabled=no state=stopped
+
+- name: Start network.
+  service: name=network enabled=yes state=started
+
+- name: Add RDO repository.
+  yum: name=https://repos.fedorapeople.org/repos/openstack/openstack-mitaka/rdo-release-mitaka-5.noarch.rpm state=present
+
+- name: Install Mitaka version
+  yum: name=centos-release-openstack-mitaka
+
+- name: upgrade all packages.
+  yum: name=* state=latest
+
+- name: Install Packstack.
+  yum: name=openstack-packstack
+
+- name: Files are copied.
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ files }}"
+
+- name: Directories are created for SSL.
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items: directories
+
+- name: Create directory for
+  file: path=/etc/packstackca/certs state=directory mode=0755
+
+## Generate Certificate.
+
+- name:  Generate RSA.
+  command: openssl genrsa -out selfkey.key 2048
+  args:
+    chdir: /etc/pki/tls/private
+
+- name:  Generate CSR.
+  expect:
+    command: openssl req -new -key selfkey.key -out selfkey.csr
+    chdir: /etc/pki/tls/private
+    responses:
+      'Country': "{{ GENERATE_CSR_COUNTRY_NAME_ANSWER }}"
+      'State': "{{ GENERATE_CSR_STATE_OR_PROVINCE_ANSWER }}"
+      'Locality': "{{ GENERATE_CSR_LOCALITY_NAME }}"
+      'Organization': "{{ GENERATE_CSR_ORGANIZATION_NAME }}"
+      'Organizational': "{{ GENERATE_CSR_ORGANIZATIONAL_UNIT_NAME }}"
+      'Common': "{{ GENERATE_CSR_COMMON_NAME }}"
+      'Email': "{{ GENERATE_CSR_EMAIL_ADDRESS }}"
+      'A ': "{{ GENERATE_CSR_A_CHALLENGE_PASSWORD }}"
+      'An': "{{ GENERATE_CSR_AN_OPTIONAL_COMPANY_NAME }}"
+
+- name:  Generate Self Sign Key.
+  command: openssl x509 -req -days 1095 -in ../private/selfkey.csr -signkey ../private/selfkey.key -out selfcert.crt
+  args:
+    chdir: /etc/pki/tls/certs
+
+- name: Copy selfcert.crt to /etc/packstackca/
+  copy: src=/etc/pki/tls/certs/selfcert.crt dest=/etc/packstackca/certs/{{ private_network_ip }}ssl_vnc.crt remote_src=yes
+
+- name: Install Packstack All-In-One.
+  command: packstack --answer-file /vagrant/packstack-answers.cfg
+
+- name: Set alias to OpenStack Dashboard to VM private IP
+  lineinfile:
+    dest=/etc/httpd/conf.d/15-horizon_vhost.conf
+    insertafter='ServerAlias localhost'
+    line="  ServerAlias {{ private_network_ip }}"
+    state=present
+
+- name: Set alias to OpenStack SSL Dashboard to VM private IP
+  lineinfile:
+    dest=/etc/httpd/conf.d/15-horizon_ssl_vhost.conf
+    insertafter='ServerAlias localhost'
+    line="  ServerAlias {{ private_network_ip }}"
+    state=present
+
+- name: Update httpd > 15-horizon_ssl_vhost.conf > SSLCertificateFile
+  lineinfile: dest=/etc/httpd/conf.d/15-horizon_ssl_vhost.conf regexp=SSLCertificateFile line="  SSLCertificateFile      \"/etc/pki/tls/certs/selfcert.crt\""
+
+- name: Update httpd > 15-horizon_ssl_vhost.conf > SSLCertificateKeyFile
+  lineinfile: dest=/etc/httpd/conf.d/15-horizon_ssl_vhost.conf regexp=SSLCertificateKeyFile line="  SSLCertificateKeyFile   \"/etc/pki/tls/private/selfkey.key\""
+
+- name: Update httpd > 15-horizon_ssl_vhost.conf > SSLCACertificateFile
+  lineinfile: dest=/etc/httpd/conf.d/15-horizon_ssl_vhost.conf regexp=SSLCACertificateFile line="  SSLCACertificateFile    \"/etc/packstackca/certs/{{ private_network_ip }}ssl_vnc.crt\""
+
+- name: Restart httpd
+  service: name=httpd enabled=yes state=restarted
