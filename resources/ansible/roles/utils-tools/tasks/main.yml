@@ -4,9 +4,4 @@
   with_items:
     - ntp
     - ed
-    - mlocate
   register: result
-
-- name: Update db
-  command: updatedb
-  when: result|succeeded

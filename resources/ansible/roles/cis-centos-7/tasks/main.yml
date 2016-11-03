@@ -1,3 +1,6 @@
 ---
-- name: CIS Test
-  command: echo "CIS Test"
+- name: CIS CentOS Linux 7 Benchmark
+  command: /vagrant/ansible/shell/cis.sh
+  register: result
+
+- debug: msg="{{ result.stdout_lines }}"

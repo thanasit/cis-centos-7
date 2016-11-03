@@ -1,7 +1,6 @@
 [cis-hosts]
 cisprod01 ansible_host=192.168.1.112
 
-
 [cis-hosts:vars]
 ansible_user=vagrant
 ansible_ssh_pass=vagrant
