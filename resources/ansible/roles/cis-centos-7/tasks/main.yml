@@ -1,6 +1,24 @@
 ---
 - name: CIS CentOS Linux 7 Benchmark
-  command: /vagrant/ansible/shell/cis.sh
-  register: result
+  shell: /vagrant/ansible/shell/cis.sh
+  register: cis_result
 
-- debug: msg="{{ result.stdout_lines }}"
+- debug: msg="{{ cis_result.stdout_lines }}"
+
+- name: Comment lines in /etc/passwd (sync)
+  lineinfile: dest=/etc/psswd regexp=^sync:\w line="#sync:x:5:0:sync:/sbin:/bin/sync"
+  register: sync_result
+
+- debug: msg="{{ sync_result.stdout_lines }}"
+
+- name: Comment lines in /etc/passwd (shutdown)
+  lineinfile: dest=/etc/psswd regexp=^shutdown:\w line="#shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown"
+  register: shutdown_result
+
+- debug: msg="{{ shutdown_result.stdout_lines }}"
+
+- name: Comment lines in /etc/passwd (halt)
+  lineinfile: dest=/etc/psswd regexp=^halt:\w line="#halt:x:7:0:halt:/sbin:/sbin/halt"
+  register: halt_result
+
+- debug: msg="{{ halt_result.stdout_lines }}"
