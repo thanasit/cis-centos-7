@@ -147,38 +147,3 @@ echo 'NETWORKING_IPV6=no' >> /etc/sysconfig/network
 echo 'IPV6INIT=no' >> /etc/sysconfig/network
 echo 'install dccp /bin/true' >> /etc/modprobe.d/CIS.conf
 echo 'umask 027' >> /etc/sysconfig/init
-
-PERMITROOTLOGIN=`grep '#PermitRootLogin' /etc/ssh/sshd_config | wc -l`
-PERMITEMPTYPASSWORDS=`grep '#PermitEmptyPasswords' /etc/ssh/sshd_config | wc -l`
-BANNER=`grep '#Banner' /etc/ssh/sshd_config | wc -l`
-LOGLEVEL=`grep '#LogLevel' /etc/ssh/sshd_config | wc -l`
-X11FORWARDING=`grep '#X11Forwarding' /etc/ssh/sshd_config | wc -l`
-MAXAUTHTRIES=`grep '#MaxAuthTries' /etc/ssh/sshd_config | wc -l`
-IGNORERHOSTS=`grep '#IgnoreRhosts' /etc/ssh/sshd_config | wc -l`
-HOSTBASEDAUTHENICATION=`grep '#HostbasedAuthentication' /etc/ssh/sshd_config | wc -l`
-
-
-if [ $PERMITROOTLOGIN -eq 1 ]; then
-	echo 'PermitRootLogin no' >> /etc/ssh/sshd_config
-fi
-if [ $PERMITEMPTYPASSWORDS -eq 1 ]; then
-	echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
-fi
-if [ $BANNER -eq 1 ]; then
-	echo 'Banner /etc/issue.net' >> /etc/ssh/sshd_config
-fi
-if [ $LOGLEVEL -eq 1 ]; then
-	echo 'LogLevel INFO' >> /etc/ssh/sshd_config
-fi
-if [ $X11FORWARDING -eq 1 ]; then
-	echo 'X11Forwarding yes' >> /etc/ssh/sshd_config
-fi
-if [ $MAXAUTHTRIES -eq 1 ]; then
-	echo 'MaxAuthTries 4' >> /etc/ssh/sshd_config
-fi
-if [ $IGNORERHOSTS -eq 1 ]; then
-	echo 'IgnoreRhosts yes' >> /etc/ssh/sshd_config
-fi
-if [ $HOSTBASEDAUTHENICATION -eq 1 ]; then
-	echo 'HostbasedAuthentication no' >> /etc/ssh/sshd_config
-fi

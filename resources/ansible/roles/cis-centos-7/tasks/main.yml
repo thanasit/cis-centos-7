@@ -5,20 +5,41 @@
 
 - debug: msg="{{ cis_result.stdout_lines }}"
 
+- name: Set PermitRootLogin is 'no' value
+  lineinfile: dest=/etc/ssh/sshd_config regexp='#PermitRootLogin+\s|PermitRootLogin+\s(yes|no)' line='PermitRootLogin no'
+  
+- name: Set HostbasedAuthentication is 'no' value
+  lineinfile: dest=/etc/ssh/sshd_config regexp='#HostbasedAuthentication+\s|HostbasedAuthentication+\s(yes|no)' line='HostbasedAuthentication no'
+  
+- name: Set Banner is '/etc/issue.net' value
+  lineinfile: dest=/etc/ssh/sshd_config regexp='(#Banner|Banner)(\s\/[a-z]+\/[a-z]+.[a-z]+|\s[a-z]+|)' line='Banner /etc/issue.net'
+  
+- name: Set LogLevel is 'INFO' value
+  lineinfile: dest=/etc/ssh/sshd_config regexp='(#LogLevel|LogLevel)(\s[a-zA-Z]+)' line='LogLevel INFO'
+  
+- name: Set X11Forwarding is 'yes' value
+  lineinfile: dest=/etc/ssh/sshd_config regexp='#X11Forwarding+\s|X11Forwarding+\s(yes|no)' line='X11Forwarding yes'
+  
+- name: Set MaxAuthTries is '4' value
+  lineinfile: dest=/etc/ssh/sshd_config regexp='(#MaxAuthTries|MaxAuthTries)(\s[0-9]+)' line='MaxAuthTries 4'
+  
+- name: Set IgnoreRhosts is 'yes' value
+  lineinfile: dest=/etc/ssh/sshd_config regexp='#IgnoreRhosts+\s|IgnoreRhosts+\s(yes|no)' line='IgnoreRhosts yes'  
+  
 - name: Comment lines in /etc/passwd (sync)
-  lineinfile: dest=/etc/psswd regexp=^sync:\w line="#sync:x:5:0:sync:/sbin:/bin/sync"
+  command: sed -i.bak '/^sync:\w/d' /etc/passwd
   register: sync_result
 
 - debug: msg="{{ sync_result.stdout_lines }}"
 
 - name: Comment lines in /etc/passwd (shutdown)
-  lineinfile: dest=/etc/psswd regexp=^shutdown:\w line="#shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown"
+  command: sed -i.bak '/^shutdown:\w/d' /etc/passwd
   register: shutdown_result
 
 - debug: msg="{{ shutdown_result.stdout_lines }}"
 
 - name: Comment lines in /etc/passwd (halt)
-  lineinfile: dest=/etc/psswd regexp=^halt:\w line="#halt:x:7:0:halt:/sbin:/sbin/halt"
+  command: sed -i.bak '/^halt:\w/d' /etc/passwd
   register: halt_result
 
 - debug: msg="{{ halt_result.stdout_lines }}"
